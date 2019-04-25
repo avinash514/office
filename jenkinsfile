@@ -1,0 +1,43 @@
+try
+{
+node('.Net-FCCT-03')
+{
+parameters
+{
+string(defaultValue: '',description: 'github repo url',name: 'gitrepourl')
+string(defaultValue: '',description: 'github branch',name: 'branchname')
+}
+stage('checkout code')
+{
+git credentialsId: "FCCT-GHE", url: params.gitrepourl, branch: params.branchname
+}
+stage('Build')
+{
+echo 'Building..'
+echo BUILD_NUMBER
+def files = findFiles(glob: "ActimizeSeleniumAutomation/")
+def item = "${files[0].path}"
+echo """${item}"""
+echo 'Compile Code'
+def folderpath=WORKSPACE + "\\ActimizeSeleniumAutomation\\"
+echo folderpath
+ws(folderpath)
+{
+bat "start cmd.exe cd ${folderpath}"
+echo 'cd'
+bat "dir /s /B *.java > javaFilePath.txt"
+bat "start cmd.exe /c mkdir bin"
+echo 'creating bin'
+bat "start cmd.exe /c javac -classpath lib/* -d ./bin @javaFilePath.txt"
+}
+}
+stage('SeleniumTest')
+{
+echo 'Run Selenium....'
+def folderpath1=WORKSPACE + "\\ActimizeSeleniumAutomation\\"
+echo folderpath1
+ws(folderpath1)
+{
+echo WORKSPACE
+bat "java -cp bin;lib/* org.testng.TestNG testng1.xml"
+//bat "start cmd.
